@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Jobcan 工数入力改善",
+  "version": "1.0.0",
+  "description": "Jobcanの工数入力画面のUXを改善します（リロード防止・月維持・連続入力）",
+  "minimum_chrome_version": "111",
+  "content_scripts": [
+    {
+      "matches": ["https://ssl.jobcan.jp/employee/man-hour-manage*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://ssl.jobcan.jp/employee/man-hour-manage*"],
+      "js": ["inject.js"],
+      "world": "MAIN",
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
