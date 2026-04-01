@@ -21,11 +21,17 @@ Jobcanの工数入力画面 (`/employee/man-hour-manage`) のUXを改善するCh
 1. このリポジトリをクローン
    ```bash
    git clone https://github.com/hatai/jobcan-chrome-ext.git
+   cd jobcan-chrome-ext
    ```
-2. Chromeで `chrome://extensions` を開く
-3. 右上の「デベロッパー モード」をONにする
-4. 「パッケージ化されていない拡張機能を読み込む」をクリック
-5. クローンした `jobcan-chrome-ext` ディレクトリを選択
+2. ビルド
+   ```bash
+   npm install
+   npm run build
+   ```
+3. Chromeで `chrome://extensions` を開く
+4. 右上の「デベロッパー モード」をONにする
+5. 「パッケージ化されていない拡張機能を読み込む」をクリック
+6. `dist` ディレクトリを選択
 
 ## 動作要件
 
@@ -36,17 +42,17 @@ Jobcanの工数入力画面 (`/employee/man-hour-manage`) のUXを改善するCh
 
 ```
 jobcan-chrome-ext/
-├── manifest.json    # Chrome拡張マニフェスト (Manifest V3)
-├── inject.js        # ページコンテキスト注入スクリプト (MAIN world)
-│                    # - 保存ボタンのインターセプト
-│                    # - 既存バリデーション (pushSave()) の呼び出し
-│                    # - 「保存して次へ」ボタンの追加
-├── content.js       # メインロジック (isolated world)
-│                    # - AJAX保存 (fetch API)
-│                    # - 保存後のDOM更新
-│                    # - 連続入力（次の未入力平日を自動で開く）
-├── content.css      # UIスタイル
-└── icons/           # 拡張アイコン (16/48/128px)
+├── src/
+│   ├── global.d.ts    # TypeScript グローバル型定義
+│   ├── inject.ts      # ページコンテキスト注入スクリプト (MAIN world)
+│   ├── content.ts     # メインロジック (isolated world)
+│   ├── content.css    # UIスタイル
+│   └── manifest.json  # Chrome拡張マニフェスト (Manifest V3)
+├── icons/             # 拡張アイコン (16/48/128px)
+├── dist/              # ビルド出力 (Chrome拡張として読み込むディレクトリ)
+├── rolldown.config.mjs
+├── tsconfig.json
+└── package.json
 ```
 
 ## 仕組み

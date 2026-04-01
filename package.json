@@ -1,0 +1,15 @@
+{
+  "name": "jobcan-chrome-ext",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Jobcanの工数入力画面のUXを改善するChrome拡張",
+  "scripts": {
+    "build": "rolldown -c",
+    "watch": "rolldown -c --watch"
+  },
+  "devDependencies": {
+    "rolldown": "^1.0.0-rc.12",
+    "rollup-plugin-copy": "^3.5.0",
+    "typescript": "^5.8.0"
+  }
+}

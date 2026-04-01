@@ -1,4 +1,4 @@
-// content.js — Content script (isolated world)
+// content.ts — Content script (isolated world)
 // 役割:
 // 1. inject.jsからのCustomEventを受信してAJAX保存を実行
 // 2. 保存成功後のDOM更新（一覧テーブルの工数セル書き換え）
@@ -15,7 +15,7 @@
   // --- 初期化 ---
   init();
 
-  function init() {
+  function init(): void {
     const editMenu = document.getElementById('edit-menu');
     if (!editMenu) {
       console.warn(LOG_PREFIX, '#edit-menu not found, content.js disabled');
@@ -23,14 +23,16 @@
     }
 
     // inject.jsからのCustomEventを受信
-    document.addEventListener('jce-save-validated', onSaveValidated);
+    document.addEventListener('jce-save-validated', ((e: CustomEvent<JceSaveValidatedDetail>) => {
+      onSaveValidated(e);
+    }) as EventListener);
 
     console.log(LOG_PREFIX, 'Initialized');
   }
 
   // --- 保存フロー ---
 
-  async function onSaveValidated(e) {
+  async function onSaveValidated(e: CustomEvent<JceSaveValidatedDetail>): Promise<void> {
     if (isSaving) return;
     isSaving = true;
 
@@ -42,8 +44,8 @@
     }
   }
 
-  async function performAjaxSave(openNext) {
-    const form = document.getElementById('save-form');
+  async function performAjaxSave(openNext: boolean): Promise<void> {
+    const form = document.getElementById('save-form') as HTMLFormElement | null;
     if (!form) {
       console.error(LOG_PREFIX, '#save-form not found');
       return;
@@ -53,7 +55,13 @@
     clearError();
 
     const formData = new FormData(form);
-    const savedTime = formData.get('time');
+    const savedTimeRaw = formData.get('time');
+    if (savedTimeRaw === null || typeof savedTimeRaw !== 'string') {
+      console.error(LOG_PREFIX, 'time field not found in form');
+      enableSaveButtons();
+      return;
+    }
+    const savedTime = savedTimeRaw;
 
     // 保存した工数合計を計算（DOM更新用）
     const totalMinutes = calcTotalMinutesFromForm(form);
@@ -76,8 +84,8 @@
       if (html.includes('id="save-form"')) {
         // エラーパスのみDOMParserで詳細メッセージを抽出
         const doc = new DOMParser().parseFromString(html, 'text/html');
-        const form = doc.querySelector('#save-form');
-        const errorEl = form?.querySelector('.jbc-text-danger, .text-danger, .alert-danger');
+        const respForm = doc.querySelector('#save-form');
+        const errorEl = respForm?.querySelector('.jbc-text-danger, .text-danger, .alert-danger');
         showError(errorEl?.textContent?.trim() || '保存に失敗しました。再度お試しください。');
         return;
       }
@@ -100,7 +108,7 @@
 
   // --- DOM更新 ---
 
-  function updateTableRow(savedTime, totalMinutes) {
+  function updateTableRow(savedTime: string, totalMinutes: number): void {
     try {
       const row = findTableRowByTime(savedTime);
       if (!row) {
@@ -130,19 +138,19 @@
   }
 
   // 一覧テーブルの各行を走査し、editボタンのtimestampとともにyield
-  function* iterateTableRows() {
+  function* iterateTableRows(): Generator<{ row: Element; rowTime: string }> {
     for (const table of document.querySelectorAll('main table.jbc-table')) {
       for (const row of table.querySelectorAll('tbody tr')) {
         const editBtn = row.querySelector('[onclick*="openEditWindow"]');
         if (!editBtn) continue;
-        const match = editBtn.getAttribute('onclick').match(EDIT_WINDOW_RE);
+        const match = editBtn.getAttribute('onclick')?.match(EDIT_WINDOW_RE);
         if (!match) continue;
         yield { row, rowTime: match[1] };
       }
     }
   }
 
-  function findTableRowByTime(targetTime) {
+  function findTableRowByTime(targetTime: string): Element | null {
     for (const { row, rowTime } of iterateTableRows()) {
       if (rowTime === String(targetTime)) return row;
     }
@@ -151,10 +159,10 @@
 
   // --- 連続入力 ---
 
-  function closeModalAndContinue(openNext, savedTime) {
-    const closeModal = () => {
+  function closeModalAndContinue(openNext: boolean, savedTime: string): void {
+    const closeModal = (): void => {
       // jQuery/Bootstrap が利用可能か
-      if (window.$ && typeof $.fn.modal === 'function') {
+      if (window.$ && typeof $.fn?.modal === 'function') {
         $('#man-hour-manage-modal').modal('hide');
       } else {
         const closeBtn = document.getElementById('menu-close');
@@ -178,7 +186,7 @@
 
     // モーダルの閉じアニメーション完了を待ってから次を開く
     const modal = document.getElementById('man-hour-manage-modal');
-    if (modal && window.$ && typeof $.fn.on === 'function') {
+    if (modal && window.$ && typeof $.fn?.on === 'function') {
       $(modal).one('hidden.bs.modal', () => {
         openEditWindowSafe(nextTime);
       });
@@ -190,7 +198,7 @@
     }
   }
 
-  function findNextUnfilledWeekday(currentTime) {
+  function findNextUnfilledWeekday(currentTime: string): string | null {
     let found = false;
     for (const { row, rowTime } of iterateTableRows()) {
       if (!found) {
@@ -203,11 +211,11 @@
     return null;
   }
 
-  function isWeekend(row, unixTime) {
+  function isWeekend(row: Element, unixTime: string): boolean {
     // 第1候補: 日付テキストの末尾1文字
     const dateLink = row.querySelector('a');
     if (dateLink) {
-      const text = dateLink.textContent.trim();
+      const text = dateLink.textContent?.trim() ?? '';
       const lastChar = text.slice(-1);
       if (lastChar === '土' || lastChar === '日') return true;
     }
@@ -222,36 +230,36 @@
     return day === 0 || day === 6;
   }
 
-  function isUnfilled(row) {
+  function isUnfilled(row: Element): boolean {
     // 第1候補: jbc-text-danger クラスの存在
     if (row.querySelector('.jbc-text-danger')) return true;
 
     // 第2候補: テキストに「入力がありません」
     const cells = row.querySelectorAll('td');
     if (cells.length >= 3) {
-      const text = cells[2].textContent.trim();
+      const text = cells[2].textContent?.trim() ?? '';
       if (text === '入力がありません') return true;
     }
 
     return false;
   }
 
-  function openEditWindowSafe(unixTime) {
+  function openEditWindowSafe(unixTime: string): void {
     // inject.jsのページコンテキストのopenEditWindowを呼ぶため、
     // CustomEventを使ってinject.js側で実行してもらう
     document.dispatchEvent(
-      new CustomEvent('jce-open-edit', { detail: { time: unixTime } })
+      new CustomEvent<JceOpenEditDetail>('jce-open-edit', { detail: { time: unixTime } })
     );
   }
 
   // --- UIヘルパー ---
 
-  function disableSaveButtons() {
-    const saveBtn = document.getElementById('save');
-    const nextBtn = document.getElementById('jce-save-next');
+  function disableSaveButtons(): void {
+    const saveBtn = document.getElementById('save') as HTMLButtonElement | null;
+    const nextBtn = document.getElementById('jce-save-next') as HTMLButtonElement | null;
     if (saveBtn) {
       saveBtn.disabled = true;
-      saveBtn.dataset.originalText = saveBtn.textContent;
+      saveBtn.dataset.originalText = saveBtn.textContent ?? '';
       saveBtn.textContent = '保存中...';
     }
     if (nextBtn) {
@@ -259,9 +267,9 @@
     }
   }
 
-  function enableSaveButtons() {
-    const saveBtn = document.getElementById('save');
-    const nextBtn = document.getElementById('jce-save-next');
+  function enableSaveButtons(): void {
+    const saveBtn = document.getElementById('save') as HTMLButtonElement | null;
+    const nextBtn = document.getElementById('jce-save-next') as HTMLButtonElement | null;
     if (saveBtn) {
       saveBtn.disabled = false;
       saveBtn.textContent = saveBtn.dataset.originalText || '保存';
@@ -271,7 +279,7 @@
     }
   }
 
-  function showError(message) {
+  function showError(message: string): void {
     clearError();
     const banner = document.createElement('div');
     banner.id = 'jce-error-banner';
@@ -280,7 +288,7 @@
 
     // #un-match-time の上に挿入、なければ .modal-body の先頭に
     const target = document.getElementById('un-match-time');
-    if (target && target.parentNode) {
+    if (target?.parentNode) {
       target.parentNode.insertBefore(banner, target);
     } else {
       const modalBody = document.querySelector('.modal-body');
@@ -290,21 +298,21 @@
     }
   }
 
-  function clearError() {
+  function clearError(): void {
     const existing = document.getElementById('jce-error-banner');
     if (existing) existing.remove();
   }
 
   // --- ユーティリティ ---
 
-  function minutesToHHMM(totalMinutes) {
+  function minutesToHHMM(totalMinutes: number): string {
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
     return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
   }
 
-  function calcTotalMinutesFromForm(form) {
-    const hiddenMinutes = form.querySelectorAll('input[name="hiddenMinutes[]"]');
+  function calcTotalMinutesFromForm(form: HTMLFormElement): number {
+    const hiddenMinutes = form.querySelectorAll<HTMLInputElement>('input[name="hiddenMinutes[]"]');
     let total = 0;
     hiddenMinutes.forEach((input) => {
       const val = parseInt(input.value, 10);
