@@ -22,3 +22,45 @@
   opacity: 0.65;
   cursor: not-allowed;
 }
+
+/* 保存中スピナー（保存ボタンが disabled の間だけ表示） */
+#save:disabled::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  vertical-align: middle;
+  animation: jce-spin 0.6s linear infinite;
+}
+
+@keyframes jce-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 保存成功トースト（body直下・画面下中央に固定） */
+.jce-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #155724;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2147483647;
+  pointer-events: none;
+}
+
+.jce-toast.is-visible {
+  opacity: 1;
+}

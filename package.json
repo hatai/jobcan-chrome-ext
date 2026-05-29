@@ -8,11 +8,23 @@
   },
   "scripts": {
     "build": "rolldown -c",
-    "watch": "rolldown -c --watch"
+    "watch": "rolldown -c --watch",
+    "lint": "biome lint ./src",
+    "format": "biome format --write ./src",
+    "check": "biome check --write ./src",
+    "check:ci": "biome ci ./src",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.4.16",
+    "@vitest/coverage-v8": "^4.1.7",
+    "happy-dom": "^20.9.0",
     "rolldown": "^1.0.3",
     "rollup-plugin-copy": "^3.5.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.7"
   }
 }

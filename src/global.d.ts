@@ -1,21 +1,26 @@
+// global.d.ts — Jobcan ページ由来のグローバル型のみ。
+// 拡張内部の CustomEvent detail 型は lib/events.ts に定義。
+
 // Jobcan ページ固有のグローバル関数
 declare function openEditWindow(time: number): void;
 declare function pushSave(): boolean | undefined;
 
-// jQuery 最小型定義
+// jQuery 最小型定義（Bootstrap modal 操作に必要な分のみ）
+type JQueryEventHandler = (...args: unknown[]) => void;
+
 interface JQuery {
-  modal(action: string): void;
-  on(event: string, handler: (...args: unknown[]) => void): JQuery;
-  one(event: string, handler: (...args: unknown[]) => void): JQuery;
+  modal(action: 'hide' | 'show'): void;
+  on(event: string, handler: JQueryEventHandler): JQuery;
+  one(event: string, handler: JQueryEventHandler): JQuery;
 }
 
 interface JQueryStatic {
   (selector: string): JQuery;
   (element: Element): JQuery;
   fn?: {
-    modal?: Function;
-    on?: Function;
-    one?: Function;
+    modal?: (action: string) => void;
+    on?: JQuery['on'];
+    one?: JQuery['one'];
   };
 }
 
@@ -25,16 +30,7 @@ interface Window {
   $?: JQueryStatic;
 }
 
-// HTMLFormElement 拡張
+// inject/buttons.ts の form.submit() パッチ用フラグ
 interface HTMLFormElement {
   _jceSubmitPatched?: boolean;
-}
-
-// カスタムイベント detail 型
-interface JceSaveValidatedDetail {
-  mode: 'save' | 'save-and-next';
-}
-
-interface JceOpenEditDetail {
-  time: string;
 }

@@ -1,0 +1,50 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": ["src/**/*.ts", "*.mjs", "*.json"],
+    "experimentalScannerIgnores": ["dist", "node_modules", "icons", "coverage"]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100,
+    "lineEnding": "lf"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "error"
+      },
+      "style": {
+        "useConst": "error",
+        "noNonNullAssertion": "warn"
+      },
+      "complexity": {
+        "noForEach": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "always",
+      "trailingCommas": "all",
+      "arrowParentheses": "always"
+    },
+    "globals": ["chrome", "openEditWindow", "pushSave", "$"]
+  },
+  "overrides": [
+    {
+      "includes": ["src/lib/time.ts", "src/lib/table.ts", "src/lib/save-result.ts", "src/lib/fetch-retry.ts"],
+      "linter": { "rules": { "suspicious": { "noConsole": "error" } } }
+    }
+  ]
+}
