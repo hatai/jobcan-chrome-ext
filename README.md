@@ -22,11 +22,12 @@ Jobcanの工数入力画面 (`/employee/man-hour-manage`) のUXを改善するCh
    ```bash
    git clone https://github.com/hatai/jobcan-chrome-ext.git
    cd jobcan-chrome-ext
+   mise install
+   mise run install
    ```
 2. ビルド
    ```bash
-   npm install
-   npm run build
+   mise run build
    ```
 3. Chromeで `chrome://extensions` を開く
 4. 右上の「デベロッパー モード」をONにする
